@@ -1,0 +1,59 @@
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
+    android:layout_height="match_parent" android:paddingLeft="10dp"
+    tools:context=".Demo">
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Select an image"
+        android:id="@+id/select_txt"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:layout_marginTop="70dp"
+        android:textSize="20dp"
+        android:paddingTop="7dp" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Load"
+        android:id="@+id/submit_but"
+        android:layout_marginTop="61dp"
+        android:textSize="20dp"
+        android:layout_below="@+id/select_txt"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true"
+        android:onClick="submitClick"/>
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:id="@+id/image_txtfield"
+        android:text="Please select an image"
+        android:layout_below="@+id/select_txt"
+        android:layout_alignRight="@+id/clear_but"
+        android:layout_alignEnd="@+id/clear_but"
+        android:layout_alignParentLeft="true"
+        android:layout_alignParentStart="true" />
+
+    <Button
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Clear"
+        android:id="@+id/clear_but"
+        android:textSize="20dp"
+        android:layout_alignTop="@+id/submit_but"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentEnd="true"
+        android:layout_marginRight="8dp"
+        android:onClick="clearClick"/>
+
+    <ImageView
+        android:layout_width="200dp"
+        android:layout_height="200dp"
+        android:id="@+id/imagePreview"
+        android:layout_centerHorizontal="true"
+        android:layout_below="@+id/submit_but" />
+
+</RelativeLayout>
