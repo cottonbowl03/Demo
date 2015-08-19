@@ -3,6 +3,7 @@ package com.example.robert.demo;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
+import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import com.squareup.picasso.Picasso;
@@ -90,23 +91,11 @@ public class Demo extends AppCompatActivity {
     }
 
     public void submitFile() {
-        checkContent();
-        if (valid) {
-            Picasso.with(this).load(imageAddress).into(imagePreview);
-            saveImage();
-            //sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED, Uri.parse("file://" + Environment.getExternalStorageDirectory()))); //refreshes system to show saved file
-            submitted = true;
-            submit_but.setText("Encrypt");
-        }
-    }
-
-    private void checkContent() {
-        media = null;
         if(URLUtil.isValidUrl(imageAddress)) {
-            Thread thread = new Thread() {
-                boolean img = false;
-                boolean youtube = false;
-                public void run() {
+            new AsyncTask<Void, Void, Boolean>() {
+                protected Boolean doInBackground(Void... voids) {
+                    boolean img = false;
+                    boolean youtube = false;
                     URLConnection connection = null;
                     try {
                         connection = new URL(imageAddress).openConnection();
@@ -125,12 +114,53 @@ public class Demo extends AppCompatActivity {
                             youtube = true;
                         }
                     }
-                    valid = img || youtube;
+                    return img || youtube;
                 }
-            };
-            thread.start();
+
+                protected void onPostExecute(Boolean valid) {
+                    if (valid) {
+                        Picasso.with(Demo.this).load(imageAddress).into(imagePreview);
+                        saveImage();
+                        //sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED, Uri.parse("file://" + Environment.getExternalStorageDirectory()))); //refreshes system to show saved file
+                        submitted = true;
+                        submit_but.setText("Encrypt");
+                    }
+                }
+            }.execute();
         }
     }
+
+//    private void checkContent() {
+//        media = null;
+//        if(URLUtil.isValidUrl(imageAddress)) {
+//            Thread thread = new Thread() {
+//                boolean img = false;
+//                boolean youtube = false;
+//                public void run() {
+//                    URLConnection connection = null;
+//                    try {
+//                        connection = new URL(imageAddress).openConnection();
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+//                    String contentType = connection.getHeaderField("Content-Type");
+//                    img = contentType.startsWith("image/");
+//                    if(img)
+//                        media = "image";
+//                    if (!img) {
+//                        // Check host of url if youtube exists
+//                        Uri uri = Uri.parse(imageAddress);
+//                        if ("www.youtube.com".equals(uri.getHost())) {
+//                            media = "youtube";
+//                            youtube = true;
+//                        }
+//                    }
+//                    valid = img || youtube;
+//                }
+//            };
+//            thread.start();
+//        }
+//    }
 
 
     private void saveImage() {
