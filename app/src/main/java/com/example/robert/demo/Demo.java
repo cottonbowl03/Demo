@@ -17,11 +17,9 @@ import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
 
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
-import java.io.OutputStream;
 
+import java.net.HttpURLConnection;
 import java.net.URL;
 import java.net.URLConnection;
 import java.security.SecureRandom;
@@ -30,6 +28,8 @@ import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
+
+import com.example.robert.demo.DownloadAndReadImage;
 
 public class Demo extends AppCompatActivity {
 
@@ -45,6 +45,7 @@ public class Demo extends AppCompatActivity {
     private byte[] encryptedImage;
     private boolean valid;
     private String media;
+    private int count;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -56,6 +57,7 @@ public class Demo extends AppCompatActivity {
         submit_but = (Button) findViewById(R.id.submit_but);
         submitted = false; //bool to check if user has inputted an image
         encrypted = false; //confirms that image has been encrypted
+        count = 0;
     }
 
     public void submitClick(View v) throws Exception{
@@ -66,17 +68,8 @@ public class Demo extends AppCompatActivity {
             if (!encrypted) {
                 Picasso.with(this).load(lockImage).into(imagePreview);
 
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                image.compress(Bitmap.CompressFormat.PNG, 100, baos); // bm is the bitmap object
-                byte[] b = baos.toByteArray();
-
-                byte[] keyStart = "this is a key".getBytes();
-                KeyGenerator kgen = KeyGenerator.getInstance("AES");
-                SecureRandom sr = SecureRandom.getInstance("SHA1PRNG");
-                sr.setSeed(keyStart);
-                kgen.init(128, sr); // 192 and 256 bits may not be available
-                SecretKey sKey = kgen.generateKey();
-                key = sKey.getEncoded();
+                byte[] b = imgCompress();
+                key = createKey();
 
                 encryptedImage = byteEncrypt(key, b);
                 encrypted = true;
@@ -86,6 +79,8 @@ public class Demo extends AppCompatActivity {
                 byte[] decryptedData = byteDecrypt(key, encryptedImage); //error bc uninitialized key
                 Bitmap retImage = retrieveFile(decryptedData);
                 imagePreview.setImageBitmap(retImage);
+                count++;
+                //submit_but.setVisibility(View.GONE);
             }
         }
     }
@@ -96,9 +91,10 @@ public class Demo extends AppCompatActivity {
                 protected Boolean doInBackground(Void... voids) {
                     boolean img = false;
                     boolean youtube = false;
-                    URLConnection connection = null;
+                    HttpURLConnection connection = null;
                     try {
-                        connection = new URL(imageAddress).openConnection();
+                        URL url  = new URL(imageAddress);
+                        connection = (HttpURLConnection)url.openConnection();
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -114,6 +110,7 @@ public class Demo extends AppCompatActivity {
                             youtube = true;
                         }
                     }
+                    connection.disconnect();
                     return img || youtube;
                 }
 
@@ -130,42 +127,9 @@ public class Demo extends AppCompatActivity {
         }
     }
 
-//    private void checkContent() {
-//        media = null;
-//        if(URLUtil.isValidUrl(imageAddress)) {
-//            Thread thread = new Thread() {
-//                boolean img = false;
-//                boolean youtube = false;
-//                public void run() {
-//                    URLConnection connection = null;
-//                    try {
-//                        connection = new URL(imageAddress).openConnection();
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-//                    String contentType = connection.getHeaderField("Content-Type");
-//                    img = contentType.startsWith("image/");
-//                    if(img)
-//                        media = "image";
-//                    if (!img) {
-//                        // Check host of url if youtube exists
-//                        Uri uri = Uri.parse(imageAddress);
-//                        if ("www.youtube.com".equals(uri.getHost())) {
-//                            media = "youtube";
-//                            youtube = true;
-//                        }
-//                    }
-//                    valid = img || youtube;
-//                }
-//            };
-//            thread.start();
-//        }
-//    }
-
-
     private void saveImage() {
-        DownloadAndReadImage dImage= new DownloadAndReadImage(imageAddress,0);
-        dImage.downloadBitmapImage();
+        DownloadAndReadImage dImage = new DownloadAndReadImage(imageAddress, count);
+//        dImage.downloadBitmapImage();
         image = dImage.getBitmapImage();
     }
 
@@ -208,60 +172,7 @@ public class Demo extends AppCompatActivity {
         submitted = false;
         encrypted = false;
         submit_but.setText("Load");
+        imageAddress = "http://www.online-image-editor.com//styles/2014/images/example_image.png";
         imagePreview.setImageResource(android.R.color.transparent);
-    }
-
-    public class DownloadAndReadImage {
-        String strURL;
-        int pos;
-        Bitmap bitmap = null;
-
-        // pass image url and Pos for example i:
-        DownloadAndReadImage(String url,int position) {
-            this.strURL = url;
-            this.pos = position;
-        }
-
-        public String getBitmapLocation() {
-            return "/sdcard/"+pos+".png";
-        }
-
-        public Bitmap getBitmapImage() {
-            downloadBitmapImage();
-            return readBitmapImage();
-        }
-
-        void downloadBitmapImage() {
-            InputStream input;
-            try {
-                URL url = new URL (strURL);
-                input = url.openStream();
-                byte[] buffer = new byte[1500]; //or 500*1024
-                OutputStream output = new FileOutputStream ("/sdcard/"+pos+".png");
-                try {
-                    int bytesRead = 0;
-                    while ((bytesRead = input.read(buffer, 0, buffer.length)) >= 0) {
-                        output.write(buffer, 0, bytesRead);
-                    }
-                }
-                finally {
-                    output.close();
-                    buffer = null;
-                }
-            }
-            catch(Exception e) {
-                Toast.makeText(getApplicationContext(), e.toString(), Toast.LENGTH_LONG).show();
-            }
-        }
-
-        Bitmap readBitmapImage() {
-            BitmapFactory.Options bOptions = new BitmapFactory.Options();
-            bOptions.inTempStorage = new byte[16*1024*1024];
-
-            String imageInSD = "/sdcard/"+pos+".png";
-
-            bitmap = BitmapFactory.decodeFile(imageInSD,bOptions);
-            return bitmap;
-        }
     }
 }
