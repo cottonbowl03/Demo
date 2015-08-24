@@ -13,7 +13,6 @@ import android.webkit.URLUtil;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
-import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
 
@@ -21,15 +20,13 @@ import java.io.IOException;
 
 import java.net.HttpURLConnection;
 import java.net.URL;
-import java.net.URLConnection;
+
 import java.security.SecureRandom;
 
 import javax.crypto.Cipher;
 import javax.crypto.KeyGenerator;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.SecretKeySpec;
-
-import com.example.robert.demo.DownloadAndReadImage;
 
 public class Demo extends AppCompatActivity {
 
@@ -44,7 +41,7 @@ public class Demo extends AppCompatActivity {
     private byte[] key;
     private byte[] encryptedImage;
     private boolean valid;
-    private String media;
+    public String media;
     private int count;
 
     @Override
@@ -61,7 +58,13 @@ public class Demo extends AppCompatActivity {
     }
 
     public void submitClick(View v) throws Exception{
-        if (!submitted) { submitFile(); }
+        if (!submitted) {
+            if(URLUtil.isValidUrl(imageAddress)) {
+                SaveNewFile s = new SaveNewFile();
+                s.execute(imageAddress);
+                //Picasso.with(this).load(imageAddress).into(imagePreview);
+            }
+        }
 
         else { //image has already loaded --> time to encrypt and send
 
@@ -83,54 +86,6 @@ public class Demo extends AppCompatActivity {
                 //submit_but.setVisibility(View.GONE);
             }
         }
-    }
-
-    public void submitFile() {
-        if(URLUtil.isValidUrl(imageAddress)) {
-            new AsyncTask<Void, Void, Boolean>() {
-                protected Boolean doInBackground(Void... voids) {
-                    boolean img = false;
-                    boolean youtube = false;
-                    HttpURLConnection connection = null;
-                    try {
-                        URL url  = new URL(imageAddress);
-                        connection = (HttpURLConnection)url.openConnection();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                    String contentType = connection.getHeaderField("Content-Type");
-                    img = contentType.startsWith("image/");
-                    if(img)
-                        media = "image";
-                    if (!img) {
-                        // Check host of url if youtube exists
-                        Uri uri = Uri.parse(imageAddress);
-                        if ("www.youtube.com".equals(uri.getHost())) {
-                            media = "youtube";
-                            youtube = true;
-                        }
-                    }
-                    connection.disconnect();
-                    return img || youtube;
-                }
-
-                protected void onPostExecute(Boolean valid) {
-                    if (valid) {
-                        Picasso.with(Demo.this).load(imageAddress).into(imagePreview);
-                        saveImage();
-                        //sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED, Uri.parse("file://" + Environment.getExternalStorageDirectory()))); //refreshes system to show saved file
-                        submitted = true;
-                        submit_but.setText("Encrypt");
-                    }
-                }
-            }.execute();
-        }
-    }
-
-    private void saveImage() {
-        DownloadAndReadImage dImage = new DownloadAndReadImage(imageAddress, count);
-//        dImage.downloadBitmapImage();
-        image = dImage.getBitmapImage();
     }
 
     private byte[] imgCompress() {
@@ -174,5 +129,50 @@ public class Demo extends AppCompatActivity {
         submit_but.setText("Load");
         imageAddress = "http://www.online-image-editor.com//styles/2014/images/example_image.png";
         imagePreview.setImageResource(android.R.color.transparent);
+    }
+
+    public class SaveNewFile extends AsyncTask<String, Void, Boolean>{
+        private boolean img;
+        private boolean youtube;
+        private HttpURLConnection connection;
+
+        @Override
+        protected Boolean doInBackground(String... imageAddress) {
+            img = false;
+            youtube = false;
+            connection = null;
+            try {
+                URL url = new URL(imageAddress[0]);
+                connection = (HttpURLConnection) url.openConnection();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            String contentType = connection.getHeaderField("Content-Type");
+            img = contentType.startsWith("image/");
+            if (img)
+                media = "image";
+            if (!img) {
+                // Check host of url if youtube exists
+                Uri uri = Uri.parse(imageAddress[0]);
+                if ("www.youtube.com".equals(uri.getHost())) {
+                    media = "youtube";
+                    youtube = true;
+                }
+            }
+            connection.disconnect();
+            if(img || youtube) {
+                DownloadAndReadImage dImage = new DownloadAndReadImage(imageAddress[0], count);
+                image = dImage.getBitmapImage();
+            }
+            return img||youtube;
+        }
+
+        @Override
+        protected void onPostExecute(Boolean valid){
+                //sendBroadcast(new Intent(Intent.ACTION_MEDIA_MOUNTED, Uri.parse("file://" + Environment.getExternalStorageDirectory()))); //refreshes system to show saved file
+            submitted = true;
+            Picasso.with(Demo.this).load(imageAddress).into(imagePreview);
+            submit_but.setText("Encrypt");
+        }
     }
 }
