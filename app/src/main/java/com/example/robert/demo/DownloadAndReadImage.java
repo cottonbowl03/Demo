@@ -30,6 +30,10 @@ public class DownloadAndReadImage {
         return readBitmapImage();
     }
 
+    public String getImageLocation() {
+        return "/sdcard/"+pos+".png";
+    }
+
     void downloadBitmapImage() {
         InputStream input;
         try {
