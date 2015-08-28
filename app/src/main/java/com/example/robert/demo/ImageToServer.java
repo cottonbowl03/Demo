@@ -2,6 +2,7 @@ package com.example.robert.demo;
 
 import android.os.AsyncTask;
 import android.os.Environment;
+import android.util.Log;
 
 import org.apache.http.HttpResponse;
 import org.apache.http.client.HttpClient;
@@ -35,6 +36,7 @@ public class ImageToServer {
 
     public void saveImage() throws IOException {
         File root = Environment.getExternalStorageDirectory();
+        Log.println(0,"message",root.getAbsolutePath().toString());
         File imgFile = new File(root, "fileName");
         FileOutputStream fos = new FileOutputStream(imgFile);
         fos.write(encryptedData);
@@ -51,7 +53,6 @@ public class ImageToServer {
 
         @Override
         protected String doInBackground(String... params) {
-            //String url = "robertwaynejr.bugs3.com";
             File file = new File(Environment.getExternalStorageDirectory().getAbsolutePath(), params[0]);
             try {
                 HttpClient httpclient = new DefaultHttpClient();

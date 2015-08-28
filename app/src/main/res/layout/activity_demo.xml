@@ -29,13 +29,17 @@
     <EditText
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:inputType="textCapSentences|textMultiLine|textNoSuggestions"
+        android:maxLines="2"
         android:id="@+id/image_txtfield"
-        android:hint="Please enter an image/video address"
+        android:hint="Please enter an image or video address"
         android:layout_below="@+id/select_txt"
         android:layout_alignRight="@+id/clear_but"
         android:layout_alignEnd="@+id/clear_but"
         android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true" />
+        android:layout_alignParentStart="true"
+        android:textSize="18dp"
+        />
 
     <Button
         android:layout_width="wrap_content"
