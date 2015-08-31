@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<items version="2" >
+
+    <item
+        jar="/Users/Robert/AndroidStudioProjects/Demo/app/libs/Parse-1.10.1.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="181b435832725bec96c11ff568bdfbccdacab944">
+        <dex dex="/Users/Robert/AndroidStudioProjects/Demo/app/build/intermediates/pre-dexed/debug/Parse-1.10.1-6a136653c75d8045f3e855daaf108df68cd7e0a9.jar" />
+    </item>
+    <item
+        jar="/Users/Robert/.gradle/caches/modules-2/files-2.1/com.parse.bolts/bolts-android/1.2.0/6ee2953ccf51ce72b6d548c30c4633b99eb4f9dd/bolts-android-1.2.0.jar"
+        jumboMode="false"
+        revision="22.0.1"
+        sha1="6ee2953ccf51ce72b6d548c30c4633b99eb4f9dd">
+        <dex dex="/Users/Robert/AndroidStudioProjects/Demo/app/build/intermediates/pre-dexed/debug/bolts-android-1.2.0-99725d503bec8f18f40c3a58250063f4203afc00.jar" />
+    </item>
+
+</items>
