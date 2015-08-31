@@ -1,5 +1,6 @@
 package com.example.robert.demo;
 
+import android.app.ProgressDialog;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 
@@ -27,15 +28,21 @@ public class ImageEncryption {
         this.filePath = filePath;
     }
 
-    public void encrypt() throws Exception{
+    public void encrypt(ProgressDialog dialog) throws Exception{
         comprImg = imgCompress();
+        dialog.incrementProgressBy(20);
         key = createKey();
-        encryptedImage = byteEncrypt(key, comprImg);
+        dialog.incrementProgressBy(20);
+        encryptedImage = byteEncrypt(key, comprImg, dialog);
     }
 
     public void decrypt() throws Exception{
         decryptedImage = byteDecrypt(key, encryptedImage);
 
+    }
+
+    public void updatedEncrytedImage(byte[] encryptedImage) {
+        this.encryptedImage = encryptedImage;
     }
 
     private byte[] imgCompress() {
@@ -55,10 +62,12 @@ public class ImageEncryption {
         return sKey.getEncoded();
     }
 
-    private static byte[] byteEncrypt(byte[] raw, byte[] clear) throws Exception {
+    private static byte[] byteEncrypt(byte[] raw, byte[] clear, ProgressDialog dialog) throws Exception {
         SecretKeySpec skeySpec = new SecretKeySpec(raw, "AES");
         Cipher cipher = Cipher.getInstance("AES");
+        dialog.incrementProgressBy(5);
         cipher.init(Cipher.ENCRYPT_MODE, skeySpec);
+        dialog.incrementProgressBy(15);
         return cipher.doFinal(clear);
     }
 

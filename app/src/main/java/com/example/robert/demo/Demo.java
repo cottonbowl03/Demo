@@ -5,23 +5,29 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.AsyncTask;
-import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-import com.squareup.picasso.Picasso;
-
+import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.webkit.URLUtil;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
 
+import com.parse.Parse;
+import com.parse.GetDataCallback;
+import com.parse.ParseFile;
+import com.parse.ParseObject;
+import com.parse.ParseException;
+
+import com.squareup.picasso.Picasso;
+
 import java.io.File;
 import java.io.IOException;
-
 import java.net.HttpURLConnection;
 import java.net.URL;
 
-import com.parse.Parse;
+
+
 
 public class Demo extends AppCompatActivity {
 
@@ -32,12 +38,18 @@ public class Demo extends AppCompatActivity {
     private boolean submitted;
     private boolean encrypted;
     private boolean sent;
+
+    private enum Options {NOTSUBMITTED, ENCRYPT, SEND, RETRIEVE}
+    private Options state;
+
     public String lockImage = "http://vignette3.wikia.nocookie.net/cityofwonder/images/9/96/Lock.png/revision/latest?cb=20110125080244";
     public String sentImage = "http://simpleicon.com/wp-content/uploads/sent-mail-3.png";
     private String imageLocation;
     public String media;
     private int count;
     private ImageEncryption IE;
+    ParseObject encryptedImageObj;
+    public ProgressDialog dialog;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,54 +59,104 @@ public class Demo extends AppCompatActivity {
         URLfield = (EditText) findViewById(R.id.image_txtfield);
         imagePreview = (ImageView) findViewById(R.id.imagePreview);
         submit_but = (Button) findViewById(R.id.submit_but);
-        submitted = false; //bool to check if user has inputted an image
-        encrypted = false; //confirms that image has been encrypted
-        sent = false;
+        state = Options.NOTSUBMITTED;
         count = 0;
+
+        dialog = new ProgressDialog(this);
+        dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
+        dialog.setProgress(0);
+        dialog.setMax(100);
 
         Parse.enableLocalDatastore(this);
         Parse.initialize(this, "iJSgVrh696NKtTrM3zvwNsXbXLRMgtTk2hQb8sFN", "CzGzENNv8zSjRnDXuyE5eRf98I3q6O5YWDhUSlf3");
-
-//        ParseObject testObject = new ParseObject("TestObject");
-//        testObject.put("foo", "bar");
-//        testObject.saveInBackground();
     }
 
     public void submitClick(View v) throws Exception{
-        if (!submitted) {
-            URLfield.setText(imageAddress);
-            URLfield.setKeyListener(null);
-            if(URLUtil.isValidUrl(imageAddress)) {
-                SaveNewFile s = new SaveNewFile();
-                s.execute(imageAddress);
-            }
-        }
 
-        else if (!encrypted) {
-            IE = new ImageEncryption(imageLocation);
-            IE.encrypt();
-            Picasso.with(this).load(lockImage).into(imagePreview);
-            encrypted = true;
-            submit_but.setText("Send");
-        }
+        switch(state) {
+            case ENCRYPT:
+                dialog.setMessage("Encrypting image...");
+                dialog.setProgress(0);
+                dialog.show();
 
-        else if(!sent) {
-            ImageToServer fileToSend = new ImageToServer(IE.getEncryptedImage());
-            fileToSend.sendImage();
-            Picasso.with(this).load(sentImage).into(imagePreview);
-            sent = true;
-            submit_but.setText("Retrieve");
-        }
+                IE = new ImageEncryption(imageLocation);
+                dialog.incrementProgressBy(20);
+                IE.encrypt(dialog);
+                dialog.incrementProgressBy(20);
+                Picasso.with(this).load(lockImage).into(imagePreview);
+                dialog.hide();
 
-        else { //button shows retrieve
-            IE.decrypt();
-            Bitmap retImage = IE.retrieveFile();
-            imagePreview.setImageBitmap(retImage);
-            count++;
-            submit_but.setText("Load");
-            submit_but.setEnabled(false);
+                state = Options.SEND;
+                submit_but.setText("Send");
+                break;
+
+            case SEND:
+                dialog.setMessage("Sending image...");
+                dialog.setProgress(0);
+                dialog.show();
+
+                byte[] encryptedImageBytes = IE.getEncryptedImage();
+                dialog.incrementProgressBy(30);
+                ParseFile file = new ParseFile("img.png", encryptedImageBytes); //must save the file type of the file ".png"
+                file.saveInBackground();
+                dialog.incrementProgressBy(20);
+
+                encryptedImageObj = new ParseObject("EncryptedImage");
+                encryptedImageObj.put("encryptedFile", file);
+                dialog.incrementProgressBy(20);
+                encryptedImageObj.saveInBackground();
+
+                Picasso.with(this).load(sentImage).into(imagePreview);
+                sent = true;
+                dialog.incrementProgressBy(30);
+                dialog.hide();
+
+                state = Options.RETRIEVE;
+                submit_but.setText("Retrieve");
+                break;
+
+            case RETRIEVE: //button shows retrieve
+                dialog.setMessage("Retrieving image...");
+                dialog.setProgress(0);
+                dialog.show();
+
+                ParseFile encryptedImageRetrieve = (ParseFile) encryptedImageObj.get("encryptedFile");
+                dialog.incrementProgressBy(30);
+                encryptedImageRetrieve.getDataInBackground(new GetDataCallback() {
+                    public void done(byte[] data, ParseException e) {
+                        if (e == null) {
+                            IE.updatedEncrytedImage(data);
+                            dialog.incrementProgressBy(30);
+                        } else {
+                            e.printStackTrace();
+                        }
+                    }
+                });
+                IE.decrypt();
+                dialog.incrementProgressBy(30);
+                Bitmap retImage = IE.retrieveFile();
+                imagePreview.setImageBitmap(retImage);
+                count++;
+                dialog.incrementProgressBy(10);
+                dialog.hide();
+
+                state = Options.NOTSUBMITTED;
+                submit_but.setText("Load");
+                submit_but.setEnabled(false);
+                break;
+
+            default: //not yet loaded
+                URLfield.setText(imageAddress);
+                URLfield.setKeyListener(null);
+                if (URLUtil.isValidUrl(imageAddress)) {
+                    SaveNewFile s = new SaveNewFile();
+                    s.execute(imageAddress);
+                }
+                state = Options.ENCRYPT;
+                break;
         }
     }
+
 
     public Bitmap getBitmapFromLocation(String location) {
         File imgFile = new File(location);
@@ -103,9 +165,7 @@ public class Demo extends AppCompatActivity {
 
     public void clearClick(View v) {
         URLfield.setText("Please select an image");
-        submitted = false;
-        encrypted = false;
-        sent = false;
+        state = Options.NOTSUBMITTED;
         submit_but.setText("Load");
         submit_but.setEnabled(true);
         imageAddress = "http://www.online-image-editor.com//styles/2014/images/example_image.png";
@@ -116,15 +176,11 @@ public class Demo extends AppCompatActivity {
         private boolean img;
         private boolean youtube;
         private HttpURLConnection connection;
-        ProgressDialog dialog;
 
         @Override
         protected void onPreExecute() {
-            dialog = new ProgressDialog(Demo.this);
             dialog.setMessage("Loading content...");
-            dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
             dialog.setProgress(0);
-            dialog.setMax(100);
             dialog.show();
         }
 
@@ -138,8 +194,8 @@ public class Demo extends AppCompatActivity {
                 connection = (HttpURLConnection) url.openConnection();
             } catch (IOException e) {
                 e.printStackTrace();
-            }
-            dialog.incrementProgressBy(20);
+            } dialog.incrementProgressBy(20);
+
             String contentType = connection.getHeaderField("Content-Type");
             img = contentType.startsWith("image/");
             if (img)
@@ -151,24 +207,20 @@ public class Demo extends AppCompatActivity {
                     media = "youtube";
                     youtube = true;
                 }
-            }
-            dialog.incrementProgressBy(30);
+            } dialog.incrementProgressBy(30);
             connection.disconnect();
+
             if(img || youtube) {
                 DownloadAndReadImage dImage = new DownloadAndReadImage(imageAddress[0], count);
-                //image = dImage.getBitmapImage();
                 dialog.incrementProgressBy(30);
                 imageLocation = dImage.getImageLocation();
-            }
-            dialog.incrementProgressBy(20);
+            } dialog.incrementProgressBy(50);
             return img||youtube;
         }
 
         @Override
         protected void onPostExecute(Boolean valid){
-            submitted = true;
             imagePreview.setImageBitmap(getBitmapFromLocation(imageLocation));
-            submit_but.setText("Encrypt");
             dialog.hide();
         }
     }
