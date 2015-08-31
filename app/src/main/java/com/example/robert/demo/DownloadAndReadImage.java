@@ -31,6 +31,7 @@ public class DownloadAndReadImage {
     }
 
     public String getImageLocation() {
+        downloadBitmapImage();
         return "/sdcard/"+pos+".png";
     }
 
@@ -45,7 +46,9 @@ public class DownloadAndReadImage {
                 int bytesRead = 0;
                 while ((bytesRead = input.read(buffer, 0, buffer.length)) >= 0) {
                     output.write(buffer, 0, bytesRead);
+
                 }
+
             }
             finally {
                 output.close();

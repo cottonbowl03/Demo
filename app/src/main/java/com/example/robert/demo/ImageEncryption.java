@@ -2,7 +2,6 @@ package com.example.robert.demo;
 
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.util.Log;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -32,11 +31,11 @@ public class ImageEncryption {
         comprImg = imgCompress();
         key = createKey();
         encryptedImage = byteEncrypt(key, comprImg);
-        Log.println(0,"filepath",filePath);
     }
 
     public void decrypt() throws Exception{
         decryptedImage = byteDecrypt(key, encryptedImage);
+
     }
 
     private byte[] imgCompress() {

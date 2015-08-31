@@ -1,8 +1,6 @@
 package com.example.robert.demo;
 
-import android.app.AlertDialog;
 import android.app.ProgressDialog;
-import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.Uri;
@@ -10,35 +8,36 @@ import android.os.AsyncTask;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import com.squareup.picasso.Picasso;
+
 import android.view.View;
 import android.webkit.URLUtil;
 import android.widget.Button;
 import android.widget.EditText;
 import android.widget.ImageView;
+
 import java.io.File;
 import java.io.IOException;
+
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import com.parse.Parse;
+
 public class Demo extends AppCompatActivity {
 
-    public String imageAddress =
-            "http://globe-views.com/dcim/dreams/image/image-04.jpg";
+    public String imageAddress = "http://www.jpl.nasa.gov/spaceimages/images/mediumsize/PIA17011_ip.jpg";
     private EditText URLfield;
     private ImageView imagePreview;
     private Button submit_but;
     private boolean submitted;
     private boolean encrypted;
     private boolean sent;
-    final public String lockImage =
-            "http://vignette3.wikia.nocookie.net/cityofwonder/images/9/96/Lock.png/revision/latest?cb=20110125080244";
-    final public String sentImage =
-            "http://simpleicon.com/wp-content/uploads/sent-mail-3.png";
+    public String lockImage = "http://vignette3.wikia.nocookie.net/cityofwonder/images/9/96/Lock.png/revision/latest?cb=20110125080244";
+    public String sentImage = "http://simpleicon.com/wp-content/uploads/sent-mail-3.png";
     private String imageLocation;
     public String media;
     private int count;
     private ImageEncryption IE;
-    private AlertDialog alert1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -52,43 +51,24 @@ public class Demo extends AppCompatActivity {
         encrypted = false; //confirms that image has been encrypted
         sent = false;
         count = 0;
-        createAlert();
-    }
 
-    public void createAlert() {
-        AlertDialog.Builder builder1 = new AlertDialog.Builder(this);
-        builder1.setMessage("Please enter a valid URL");
-        builder1.setCancelable(true);
-        builder1.setPositiveButton("Yes",
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        dialog.cancel();
-                    }
-                });
-        builder1.setNegativeButton("No",
-                new DialogInterface.OnClickListener() {
-                    public void onClick(DialogInterface dialog, int id) {
-                        dialog.cancel();
-                    }
-                });
+        Parse.enableLocalDatastore(this);
+        Parse.initialize(this, "iJSgVrh696NKtTrM3zvwNsXbXLRMgtTk2hQb8sFN", "CzGzENNv8zSjRnDXuyE5eRf98I3q6O5YWDhUSlf3");
 
-        alert1 = builder1.create();
+//        ParseObject testObject = new ParseObject("TestObject");
+//        testObject.put("foo", "bar");
+//        testObject.saveInBackground();
     }
 
     public void submitClick(View v) throws Exception{
         if (!submitted) {
             URLfield.setText(imageAddress);
             URLfield.setKeyListener(null);
-            //imageAddress = URLfield.getText().toString();    //want to keep this!
             if(URLUtil.isValidUrl(imageAddress)) {
                 SaveNewFile s = new SaveNewFile();
                 s.execute(imageAddress);
             }
-            else {
-                alert1.show();
-            }
         }
-
 
         else if (!encrypted) {
             IE = new ImageEncryption(imageLocation);
@@ -122,19 +102,17 @@ public class Demo extends AppCompatActivity {
     }
 
     public void clearClick(View v) {
-        //URLfield.setText("Please select an image");
+        URLfield.setText("Please select an image");
         submitted = false;
         encrypted = false;
         sent = false;
         submit_but.setText("Load");
         submit_but.setEnabled(true);
         imageAddress = "http://www.online-image-editor.com//styles/2014/images/example_image.png";
-        URLfield.setText(null);
-        URLfield.setHint("Please enter an image or video address");
         imagePreview.setImageResource(android.R.color.transparent);
     }
 
-    public class SaveNewFile extends AsyncTask<String, Integer, Boolean>{
+    public class SaveNewFile extends AsyncTask<String, Void, Boolean>{
         private boolean img;
         private boolean youtube;
         private HttpURLConnection connection;
@@ -178,12 +156,9 @@ public class Demo extends AppCompatActivity {
             connection.disconnect();
             if(img || youtube) {
                 DownloadAndReadImage dImage = new DownloadAndReadImage(imageAddress[0], count);
-                dialog.incrementProgressBy(30);
                 //image = dImage.getBitmapImage();
+                dialog.incrementProgressBy(30);
                 imageLocation = dImage.getImageLocation();
-            }
-            else {
-                alert1.show();
             }
             dialog.incrementProgressBy(20);
             return img||youtube;
@@ -193,9 +168,8 @@ public class Demo extends AppCompatActivity {
         protected void onPostExecute(Boolean valid){
             submitted = true;
             imagePreview.setImageBitmap(getBitmapFromLocation(imageLocation));
-
             submit_but.setText("Encrypt");
-            //dialog.hide();
+            dialog.hide();
         }
     }
 }
