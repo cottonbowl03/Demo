@@ -8,23 +8,21 @@
         android:layout_height="wrap_content"
         android:text="Select an image"
         android:id="@+id/select_txt"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:layout_marginTop="70dp"
+        android:layout_marginTop="33dp"
         android:textSize="20dp"
-        android:paddingTop="7dp" />
+        android:paddingTop="7dp"
+        android:layout_alignParentTop="true"
+        android:layout_alignParentLeft="true" />
 
     <Button
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Load"
         android:id="@+id/submit_but"
-        android:layout_marginTop="61dp"
         android:textSize="20dp"
-        android:layout_below="@+id/select_txt"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
-        android:onClick="submitClick"/>
+        android:onClick="submitClick"
+        android:layout_below="@+id/alert_view"
+        android:layout_alignParentLeft="true" />
 
     <EditText
         android:layout_width="wrap_content"
@@ -33,13 +31,10 @@
         android:maxLines="2"
         android:id="@+id/image_txtfield"
         android:hint="Please enter an image or video address"
-        android:layout_below="@+id/select_txt"
-        android:layout_alignRight="@+id/clear_but"
-        android:layout_alignEnd="@+id/clear_but"
-        android:layout_alignParentLeft="true"
-        android:layout_alignParentStart="true"
         android:textSize="18dp"
-        />
+        android:layout_below="@+id/select_txt"
+        android:layout_alignParentLeft="true"
+        android:layout_alignRight="@+id/clear_but" />
 
     <Button
         android:layout_width="wrap_content"
@@ -57,7 +52,19 @@
         android:layout_width="200dp"
         android:layout_height="200dp"
         android:id="@+id/imagePreview"
-        android:layout_centerHorizontal="true"
-        android:layout_below="@+id/submit_but" />
+        android:layout_below="@+id/submit_but"
+        android:layout_centerHorizontal="true" />
+
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAppearance="?android:attr/textAppearanceSmall"
+        android:text="Select Text"
+        android:id="@+id/alert_view"
+        android:textColor="#bc0000"
+        android:layout_below="@+id/image_txtfield"
+        android:layout_alignParentLeft="true"
+        android:paddingTop="5dp"
+        android:paddingBottom="5dp" />
 
 </RelativeLayout>
