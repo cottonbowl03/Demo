@@ -36,6 +36,7 @@ public class Demo extends AppCompatActivity {
 
     public String imageAddress;
     private EditText URLfield;
+    private EditText pinField;
     private TextView alertView;
     private ImageView imagePreview;
     private Button submit_but;
@@ -63,8 +64,11 @@ public class Demo extends AppCompatActivity {
         submit_but = (Button) findViewById(R.id.submit_but);
         clear_but = (Button) findViewById(R.id.clear_but);
         alertView = (TextView) findViewById(R.id.alert_view);
+        pinField = (EditText) findViewById(R.id.pin_input);
         state = Options.NOTSUBMITTED;
         count = 0;
+
+        pinField.setVisibility(View.GONE);
 
         createProgressDialog();
 
@@ -93,56 +97,77 @@ public class Demo extends AppCompatActivity {
 
                 state = Options.SEND;
                 submit_but.setText("Send");
+                pinField.setVisibility(View.VISIBLE);
                 break;
 
             case SEND:
                 setUpProgressDialog("Sending Image...");
+                if(pinField.getText().toString().length() == 4) {
+                    int pin = Integer.parseInt(pinField.getText().toString());
 
-                byte[] encryptedImageBytes = IE.getEncryptedImage();
-                dialog.incrementProgressBy(30);
-                ParseFile file = new ParseFile("img.png", encryptedImageBytes); //must save the file type of the file ".png"
-                file.saveInBackground();
-                dialog.incrementProgressBy(20);
+                    byte[] encryptedImageBytes = IE.getEncryptedImage();
+                    dialog.incrementProgressBy(30);
+                    ParseFile file = new ParseFile("img.png", encryptedImageBytes); //must save the file type of the file ".png"
+                    file.saveInBackground();
+                    dialog.incrementProgressBy(20);
 
-                encryptedImageObj = new ParseObject("EncryptedImage");
-                encryptedImageObj.put("encryptedFile", file);
-                dialog.incrementProgressBy(20);
-                encryptedImageObj.saveInBackground();
+                    encryptedImageObj = new ParseObject("EncryptedImage");
+                    encryptedImageObj.put("encryptedFile", file);
+                    encryptedImageObj.put("pin", pin);
+                    dialog.incrementProgressBy(20);
+                    encryptedImageObj.saveInBackground();
 
-                Picasso.with(this).load(sentImage).into(imagePreview);
-                dialog.incrementProgressBy(30);
-                dialog.hide();
+                    Picasso.with(this).load(sentImage).into(imagePreview);
+                    dialog.incrementProgressBy(30);
+                    dialog.hide();
 
-                state = Options.RETRIEVE;
-                submit_but.setText("Retrieve");
-                break;
+                    state = Options.RETRIEVE;
+                    submit_but.setText("Retrieve");
+                    pinField.setText("");
+                    break;
+                }
+                else {
+                    alertView.setVisibility(View.VISIBLE);
+                    alertView.setText("Please enter a valid 4 digit pin.");
+                }
 
             case RETRIEVE: //button shows retrieve
-                setUpProgressDialog("Retrieving image...");
 
-                ParseFile encryptedImageRetrieve = (ParseFile) encryptedImageObj.get("encryptedFile");
-                dialog.incrementProgressBy(30);
-                encryptedImageRetrieve.getDataInBackground(new GetDataCallback() {
-                    public void done(byte[] data, ParseException e) {
-                        if (e == null) {
-                            IE.updatedEncrytedImage(data);
-                            dialog.incrementProgressBy(30);
-                        } else {
-                            e.printStackTrace();
-                        }
-                    }
-                });
-                IE.decrypt();
-                dialog.incrementProgressBy(30);
-                Bitmap retImage = IE.retrieveFile();
-                imagePreview.setImageBitmap(retImage);
-                count++;
-                dialog.incrementProgressBy(10);
-                dialog.hide();
+                if ((pinField.getText().toString().length() == 4) &&
+                        (encryptedImageObj.getInt("pin") ==
+                                Integer.parseInt(pinField.getText().toString()))){
 
-                state = Options.NOTSUBMITTED;
-                submit_but.setText("Load");
-                submit_but.setEnabled(false);
+                        setUpProgressDialog("Retrieving image...");
+                        ParseFile encryptedImageRetrieve = (ParseFile) encryptedImageObj.get("encryptedFile");
+                        dialog.incrementProgressBy(30);
+                        encryptedImageRetrieve.getDataInBackground(new GetDataCallback() {
+                            public void done(byte[] data, ParseException e) {
+                                if (e == null) {
+                                    IE.updatedEncrytedImage(data);
+                                    dialog.incrementProgressBy(30);
+                                } else {
+                                    e.printStackTrace();
+                                }
+                            }
+                        });
+                        IE.decrypt();
+                        dialog.incrementProgressBy(30);
+                        Bitmap retImage = IE.retrieveFile();
+                        imagePreview.setImageBitmap(retImage);
+                        count++;
+                        dialog.incrementProgressBy(10);
+                        dialog.hide();
+
+                        state = Options.NOTSUBMITTED;
+                        submit_but.setText("Load");
+                        submit_but.setEnabled(false);
+                        pinField.setVisibility(View.GONE);
+                }
+                else {
+                    alertView.setVisibility(View.VISIBLE);
+                    alertView.setText("Please enter the correct pin.");
+                    pinField.setText("");
+                }
                 break;
 
             default: //not yet loaded; Options.NOTLOADED

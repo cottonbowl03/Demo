@@ -1,7 +1,8 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools" android:layout_width="match_parent"
-    android:layout_height="match_parent" android:paddingLeft="10dp"
-    tools:context=".Demo">
+    android:layout_height="match_parent" android:paddingLeft="20dp"
+    tools:context=".Demo"
+    android:paddingRight="20dp">
 
     <TextView
         android:layout_width="wrap_content"
@@ -66,5 +67,20 @@
         android:layout_alignParentLeft="true"
         android:paddingTop="5dp"
         android:paddingBottom="5dp" />
+
+    <EditText
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:inputType="numberPassword"
+        android:ems="10"
+        android:id="@+id/pin_input"
+        android:paddingLeft="5dp"
+        android:paddingRight="5dp"
+        android:layout_above="@+id/imagePreview"
+        android:password="true"
+        android:hint="Enter Pin"
+        android:layout_toRightOf="@+id/submit_but"
+        android:layout_toLeftOf="@+id/clear_but"
+        android:maxLength="4"/>
 
 </RelativeLayout>
