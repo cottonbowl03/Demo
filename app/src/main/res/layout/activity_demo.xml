@@ -30,7 +30,7 @@
         android:inputType="textCapSentences|textMultiLine|textNoSuggestions"
         android:maxLines="2"
         android:id="@+id/image_txtfield"
-        android:hint="Please enter an image or video address"
+        android:hint="Please enter an image address"
         android:textSize="18dp"
         android:layout_below="@+id/select_txt"
         android:layout_alignParentLeft="true"

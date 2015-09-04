@@ -2,15 +2,12 @@ package com.example.robert.demo;
 
 import android.app.ProgressDialog;
 import android.content.Context;
-import android.content.DialogInterface;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
-import android.support.v7.app.AlertDialog;
-//import android.support.v7.app.AppCompatActivity;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.webkit.URLUtil;
@@ -34,9 +31,7 @@ import java.net.URL;
 
 public class Demo extends AppCompatActivity {
 
-    public String imageAddress = "http://www.jpl.nasa.gov/spaceimages/images/" +
-            "mediumsize/PIA17011_ip.jpg";
-    //public String imageAddress = "https://developer.android.com/tools/support-library/features.html";
+    public String imageAddress;
     private EditText URLfield;
     private TextView alertView;
     private ImageView imagePreview;
@@ -50,7 +45,6 @@ public class Demo extends AppCompatActivity {
             "Lock.png/revision/latest?cb=20110125080244";
     public String sentImage = "http://simpleicon.com/wp-content/uploads/sent-mail-3.png";
     private String imageLocation;
-    public String media;  //<====?????
     private int count;
     private ImageEncryption IE;
     private ParseObject encryptedImageObj;
@@ -81,6 +75,7 @@ public class Demo extends AppCompatActivity {
     public void submitClick(View v) throws Exception{
         alertView.setVisibility(View.GONE);
         isNetworkAvailable();
+
         switch(state) {
 
             case ENCRYPT:
@@ -148,25 +143,17 @@ public class Demo extends AppCompatActivity {
                 break;
 
             default: //not yet loaded; Options.NOTLOADED
-                setUpProgressDialog("Loading Image...");
-                alertView.setVisibility(View.GONE);
-                URLfield.setText(imageAddress);
-                URLfield.setKeyListener(null);
-
-                if (URLUtil.isValidUrl(imageAddress)) {
+                imageAddress = URLfield.getText().toString();
+                if(imageAddress != null && URLUtil.isValidUrl(imageAddress)) {
+                    setUpProgressDialog("Loading Image...");
+                    alertView.setVisibility(View.GONE);
                     SaveNewFile s = new SaveNewFile();
                     s.execute(imageAddress);
-                }
-
-                if (imagePreview.getDrawable()==null) {
+                } else {
                     alertView.setVisibility(View.VISIBLE);
-                    alertView.setText("Please enter a valid URL of an image.");
+                    alertView.setText("Please enter a valid image URL.");
                 }
-                else {
-                    submit_but.setText("Encrypt");
-                    state = Options.ENCRYPT;
-                    break;
-                }
+            break;
         }
     }
 
@@ -176,12 +163,12 @@ public class Demo extends AppCompatActivity {
     }
 
     public void clearClick(View v) {
-        URLfield.setText("Please select an image");
+        URLfield.setText("");
+        URLfield.setHint("Please select an image");
         state = Options.NOTSUBMITTED;
         submit_but.setText("Load");
         submit_but.setEnabled(true);
-        //imageAddress = "http://www.online-image-editor.com//styles/2014/images/example_image.png";
-        imageAddress = "https://developer.android.com/tools/support-library/features.html";
+        imageAddress = "http://www.online-image-editor.com//styles/2014/images/example_image.png";
         imagePreview.setImageResource(android.R.color.transparent);
         alertView.setVisibility(View.GONE);
     }
@@ -189,7 +176,6 @@ public class Demo extends AppCompatActivity {
     public class SaveNewFile extends AsyncTask<String, Void, Boolean> {
         private boolean img;
         private HttpURLConnection connection;
-        private boolean result;
 
         @Override
         protected Boolean doInBackground(String... imageAddress) {
@@ -216,7 +202,7 @@ public class Demo extends AppCompatActivity {
                 dialog.incrementProgressBy(50);
                 return img;
             } else {
-                return false;
+                return img;
             }
         }
 
@@ -224,16 +210,15 @@ public class Demo extends AppCompatActivity {
         protected void onPostExecute(Boolean valid) {
             if (valid) {
                 imagePreview.setImageBitmap(getBitmapFromLocation(imageLocation));
-                //result = true;
+                submit_but.setText("Encrypt");
+                state = Options.ENCRYPT;
             }
             else {
-                //result = false;
-                //showErrorDialog();
+                alertView.setVisibility(View.VISIBLE);
+                alertView.setText("Please enter a valid URL of an image.");
             }
             dialog.hide();
         }
-
-        private boolean getResult() { return img; }
     }
 
     private void isNetworkAvailable() {
