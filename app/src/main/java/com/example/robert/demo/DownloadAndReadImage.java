@@ -30,23 +30,23 @@ public class DownloadAndReadImage {
 
     public String getImageLocation() {
         downloadBitmapImage();
-        return "/sdcard/"+pos+".png";
+        String location = Environment.getExternalStorageDirectory().getPath()+"/"+pos+".png";
+        return location;
     }
 
     void downloadBitmapImage() {
-        checkStorage();
-
         InputStream input;
         try {
-            URL url = new URL (strURL);
-            boolean checkSize = checkSize(url);
+            URL url = new URL(strURL);
             input = url.openStream();
-            byte[] buffer = new byte[500*1024]; //or 500*1024
-            OutputStream output = new FileOutputStream("/sdcard/"+pos+".png");
+            byte[] buffer = new byte[500 * 1024]; //or 500*1024
+            OutputStream output = new FileOutputStream(Environment.getExternalStorageDirectory().
+                    getPath() + "/" + pos + ".png");
             try {
                 int bytesRead = 0;
                 while ((bytesRead = input.read(buffer, 0, buffer.length)) >= 0) {
                     output.write(buffer, 0, bytesRead);
+
                 }
             }
             finally {
@@ -55,29 +55,8 @@ public class DownloadAndReadImage {
                 buffer = null;
             }
         }
-        catch(Exception e) {
-            //do something with the exception
-            Log.e("MYAPP", "exception",e);
+        catch (Exception e) {
+                Log.e("MYAPP", "exception", e);
         }
-    }
-
-
-    private boolean checkSize(URL url) throws Exception {
-        int file_size = 0;
-        try {
-            URLConnection urlConnection = url.openConnection();
-            urlConnection.connect();
-            file_size = urlConnection.getContentLength();
-        } catch (Exception e) {
-            //do something with the exception
-        }
-        return file_size > checkStorage();
-    }
-
-    private int checkStorage() {
-        StatFs stat = new StatFs(Environment.getExternalStorageDirectory().getPath());
-        //long bytesAvailable = (long)stat.getBlockSizeLong() *(long)stat.getAvailableBlocksLong(); //min api is 18
-        long bytesAvailable = (long)stat.getBlockSize() * (long)stat.getBlockCount();
-        return (int) bytesAvailable;
     }
 }

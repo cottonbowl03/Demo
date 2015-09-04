@@ -8,6 +8,8 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.AsyncTask;
 import android.os.Bundle;
+import android.os.Environment;
+import android.os.StatFs;
 import android.support.v7.app.AppCompatActivity;
 import android.view.View;
 import android.webkit.URLUtil;
@@ -28,6 +30,7 @@ import java.io.File;
 import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 
 public class Demo extends AppCompatActivity {
 
@@ -176,6 +179,7 @@ public class Demo extends AppCompatActivity {
     public class SaveNewFile extends AsyncTask<String, Void, Boolean> {
         private boolean img;
         private HttpURLConnection connection;
+        private boolean isSaveable;
 
         @Override
         protected Boolean doInBackground(String... imageAddress) {
@@ -195,14 +199,16 @@ public class Demo extends AppCompatActivity {
             dialog.incrementProgressBy(30);
             connection.disconnect();
 
-            if (img) {
+            isSaveable = checkIfSaveable(imageAddress[0]);
+
+            if (img && isSaveable) {
                 DownloadAndReadImage dImage = new DownloadAndReadImage(imageAddress[0], count);
                 dialog.incrementProgressBy(30);
                 imageLocation = dImage.getImageLocation();
                 dialog.incrementProgressBy(50);
                 return img;
             } else {
-                return img;
+                return false;
             }
         }
 
@@ -212,12 +218,48 @@ public class Demo extends AppCompatActivity {
                 imagePreview.setImageBitmap(getBitmapFromLocation(imageLocation));
                 submit_but.setText("Encrypt");
                 state = Options.ENCRYPT;
-            }
-            else {
+            } else {
                 alertView.setVisibility(View.VISIBLE);
-                alertView.setText("Please enter a valid URL of an image.");
+                alertView.setText("Please enter a valid URL of an image. The image could be" +
+                        " too large or not an image.");
             }
             dialog.hide();
+        }
+
+        private boolean checkIfSaveable(String address) {
+            if(checkStorage()) {
+                int file_size = 0;
+                try {
+                    URL url = new URL(address);
+                    URLConnection urlConnection = url.openConnection();
+                    urlConnection.connect();
+                    file_size = urlConnection.getContentLength();
+                } catch (Exception e) {
+                    //do something with the exception
+                }
+                return file_size < checkSizeOfStorage();
+            }
+            else {
+                return false;
+            }
+        }
+
+        private boolean checkStorage() {
+            boolean mExternalStorageAvailable = false;
+            boolean mExternalStorageWriteable = false;
+            String state = Environment.getExternalStorageState();
+
+            if (Environment.MEDIA_MOUNTED.equals(state)) {
+                mExternalStorageAvailable = mExternalStorageWriteable = true;
+            }
+            return mExternalStorageAvailable && mExternalStorageWriteable;
+        }
+
+        private int checkSizeOfStorage() {
+            StatFs stat = new StatFs(Environment.getExternalStorageDirectory().getPath());
+            //long bytesAvailable = (long)stat.getBlockSizeLong() *(long)stat.getAvailableBlocksLong(); //min api is 18
+            long bytesAvailable = (long) stat.getBlockSize() * (long) stat.getBlockCount();
+            return (int) bytesAvailable;
         }
     }
 
@@ -255,18 +297,4 @@ public class Demo extends AppCompatActivity {
         dialog.setProgress(0);
         dialog.show();
     }
-//    private void showErrorDialog() {
-//        new AlertDialog.Builder(Demo.this)
-//                .setTitle("Issue with URL")
-//                .setMessage("The URL you provided is not a supported image. Please " +
-//                        "try a different URL.")
-//                .setPositiveButton(android.R.string.ok, new DialogInterface.OnClickListener() {
-//                    public void onClick(DialogInterface dialog, int which) {
-//                        clear_but.performClick();
-//                    }
-//                })
-//                .setIcon(android.R.drawable.ic_dialog_alert)
-//                .setCancelable(false)
-//                .show();
-//    }
 }
