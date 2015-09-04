@@ -79,12 +79,14 @@ public class Demo extends AppCompatActivity {
                 "CzGzENNv8zSjRnDXuyE5eRf98I3q6O5YWDhUSlf3");
     }
 
+
+    //method goes through the 4 cases of the submit button
     public void submitClick(View v) throws Exception{
         alertView.setVisibility(View.GONE);
         isNetworkAvailable();
 
         switch(state) {
-
+            //for this case, the iamge is AES encrypted. It can be sent to parse via a byte[]
             case ENCRYPT:
                 setUpProgressDialog("Encrypting Image...");
 
@@ -99,7 +101,8 @@ public class Demo extends AppCompatActivity {
                 submit_but.setText("Send");
                 pinField.setVisibility(View.VISIBLE);
                 break;
-
+            //the fine can be sent if the user inputs the correct pin. The pin is saved to parse
+            //and retireved from parse
             case SEND:
                 setUpProgressDialog("Sending Image...");
                 if(pinField.getText().toString().length() == 4) {
@@ -131,6 +134,8 @@ public class Demo extends AppCompatActivity {
                     alertView.setText("Please enter a valid 4 digit pin.");
                 }
 
+            //the file is retrieved from parse and unencrypted to show the image.
+            //the correct pin must be given and is varified
             case RETRIEVE: //button shows retrieve
 
                 if ((pinField.getText().toString().length() == 4) &&
@@ -170,9 +175,10 @@ public class Demo extends AppCompatActivity {
                 }
                 break;
 
+            //this default case downloads and displays the image
             default: //not yet loaded; Options.NOTLOADED
                 imageAddress = URLfield.getText().toString();
-                if(imageAddress != null && URLUtil.isValidUrl(imageAddress)) {
+                if(!imageAddress.equals("") && URLUtil.isValidUrl(imageAddress)) {
                     setUpProgressDialog("Loading Image...");
                     alertView.setVisibility(View.GONE);
                     SaveNewFile s = new SaveNewFile();
@@ -184,12 +190,12 @@ public class Demo extends AppCompatActivity {
             break;
         }
     }
-
+    //returns the location of the locally saved image
     public Bitmap getBitmapFromLocation(String location) {
         File imgFile = new File(location);
         return BitmapFactory.decodeFile(imgFile.getAbsolutePath());
     }
-
+    //anytime the user wants to reset the program
     public void clearClick(View v) {
         URLfield.setText("");
         URLfield.setHint("Please select an image");
@@ -199,8 +205,9 @@ public class Demo extends AppCompatActivity {
         imageAddress = "http://www.online-image-editor.com//styles/2014/images/example_image.png";
         imagePreview.setImageResource(android.R.color.transparent);
         alertView.setVisibility(View.GONE);
+        pinField.setVisibility(View.GONE);
     }
-
+    //AsyncTask used to download, locally save and display the image
     public class SaveNewFile extends AsyncTask<String, Void, Boolean> {
         private boolean img;
         private HttpURLConnection connection;
@@ -269,15 +276,20 @@ public class Demo extends AppCompatActivity {
             }
         }
 
-        private boolean checkStorage() {
-            boolean mExternalStorageAvailable = false;
-            boolean mExternalStorageWriteable = false;
-            String state = Environment.getExternalStorageState();
+//        private boolean checkStorage() {
+//            boolean mExternalStorageAvailable = false;
+//            boolean mExternalStorageWriteable = false;
+//            String state = Environment.getExternalStorageState();
+//
+//            if (Environment.MEDIA_MOUNTED.equals(state)) {
+//                mExternalStorageAvailable = mExternalStorageWriteable = true;
+//            }
+//            return mExternalStorageAvailable && mExternalStorageWriteable;
+//        }
 
-            if (Environment.MEDIA_MOUNTED.equals(state)) {
-                mExternalStorageAvailable = mExternalStorageWriteable = true;
-            }
-            return mExternalStorageAvailable && mExternalStorageWriteable;
+        private boolean checkStorage() {
+            return Environment.getExternalStorageState().equals(
+                    Environment.MEDIA_MOUNTED);
         }
 
         private int checkSizeOfStorage() {
@@ -287,7 +299,7 @@ public class Demo extends AppCompatActivity {
             return (int) bytesAvailable;
         }
     }
-
+    //Used multiple times to check the internet connectivity
     private void isNetworkAvailable() {
         ConnectivityManager connectivityManager
                 = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
@@ -308,7 +320,7 @@ public class Demo extends AppCompatActivity {
             submit_but.setEnabled(true);
         }
     }
-
+    //creates the load bar for downloading/encrypting/sending the image
     private void createProgressDialog() {
         dialog = new ProgressDialog(Demo.this);
         dialog.setProgressStyle(ProgressDialog.STYLE_HORIZONTAL);
@@ -316,7 +328,7 @@ public class Demo extends AppCompatActivity {
         dialog.setMax(100);
         dialog.setCancelable(false);
     }
-
+    //helps to generalize the progressdialog set up
     private void setUpProgressDialog(String text) {
         dialog.setMessage(text);
         dialog.setProgress(0);

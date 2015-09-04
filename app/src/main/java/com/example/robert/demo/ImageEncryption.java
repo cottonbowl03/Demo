@@ -15,6 +15,9 @@ import javax.crypto.spec.SecretKeySpec;
 
 /**
  * Created by Robert on 8/24/15.
+ *
+ * these methods carry out AES encryption of the image file. they occur in order of: key creation,
+ * compression, encryption, decryption, retrieval
  */
 public class ImageEncryption {
 

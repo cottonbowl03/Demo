@@ -16,6 +16,8 @@ import java.net.URLConnection;
 
 /**
  * Created by Robert on 8/20/15.
+ *
+ * Class saves the file locally from a URL and returns the location on the disk
  */
 public class DownloadAndReadImage {
     String strURL;
@@ -27,13 +29,12 @@ public class DownloadAndReadImage {
         this.strURL = url;
         this.pos = position;
     }
-
+    //returns the locaiton on the local disk of the image
     public String getImageLocation() {
         downloadBitmapImage();
-        String location = Environment.getExternalStorageDirectory().getPath()+"/"+pos+".png";
-        return location;
+        return Environment.getExternalStorageDirectory().getPath()+"/"+pos+".png";
     }
-
+    //opens up a URL connection and downloads the image
     void downloadBitmapImage() {
         InputStream input;
         try {
